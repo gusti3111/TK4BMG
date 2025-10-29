@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # LAYANAN DATABASE (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    container_name: bmg_db
+    environment:
+      # WAJIB: Password untuk superuser 'postgres' (digunakan saat inisialisasi)
+      POSTGRES_PASSWORD: secretpassword 
+      
+      # OPSIONAL TAPI DIREKOMENDASIKAN: Membuat database dan user kustom
+      POSTGRES_USER: bmguser          # User kustom yang akan digunakan oleh Backend
+      POSTGRES_DB: bmg_db             # Nama database kustom
+      
+      # Catatan: POSTGRES_USER dan POSTGRES_DB menggunakan POSTGRES_PASSWORD yang sama
+      # atau Anda bisa mendefinisikan POSTGRES_PASSWORD secara terpisah untuk user kustom.
+      # Untuk kesederhanaan, kita gunakan satu password di sini.
+      
+    volumes:
+      - postgres_data:/var/lib/postgresql/data 
+    restart: always
+  # 2. LAYANAN MIGRASI DATABASE (Menjalankan skema SQL)
+  migrate:
+    image: migrate/migrate:v4.16.2 # Image resmi untuk tool golang-migrate
+    container_name: bmg_migrate
+    volumes:
+      # Map folder skrip SQL dari host ke dalam container
+      - ./db/migrations:/app/db/migrations
+    command:
+      # Perintah untuk menjalankan migrasi NAIK (up)
+      # Format URL: postgres://user:password@host:port/dbname?sslmode=disable
+      [
+        "migrate",
+        "-path", "/app/db/migrations",
+        "-database", "postgres://bmguser:secretpassword@db:5432/bmg_db?sslmode=disable",
+        "up"
+      ]
+    depends_on:
+      - db # Wajib menunggu service 'db' siap sebelum migrasi
+    restart: on-failure # Coba lagi jika gagal, misal karena DB belum siap
+  # LAYANAN BACKEND (GO)
+  backend:
+    # Build image menggunakan Dockerfile yang baru kita buat
+    build:
+      context: ./backend 
+      dockerfile: Dockerfile
+    container_name: bmg_backend
+    ports:
+      - "8080:8080" # Ekspos port 8080 ke host
+    environment:
+      # Konfigurasi DB untuk backend: Host harus 'db' (nama layanan)
+      DB_HOST: db 
+      DB_PORT: 5432
+      DB_USER: bmguser
+      DB_PASSWORD: secretpassword
+      DB_NAME: bmg_db
+      # Catatan: Variabel lain seperti DB_HOST, PORT, dll. di-set di sini
+    depends_on:
+      - db
+    
+    restart: always
+
+# Definisi Volume
+volumes:
+  postgres_data:
