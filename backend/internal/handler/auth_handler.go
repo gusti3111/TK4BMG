@@ -47,13 +47,18 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	// 3. Set Role Default (Logika Bisnis di Handler)
-	req.Role = "user"
+	role := "user"
 
 	// 4. Panggil Repository (PERBAIKAN ARSITEKTUR)
-	// Meneruskan '&req' yang bertipe *model.User
-	// Repository (user_repository.go) akan menangani Hashing Password
-	err := h.userRepo.CreateUser( c.Request.Context(), &req
-	)
+	// Buat request sesuai kebutuhan repository
+	registerReq := &model.RegisterRequest{
+		Username: req.Username,
+		Password: req.Password,
+		Name:     req.Name,
+		Email:    req.Email,
+	}
+
+	err := h.userRepo.CreateUser(c.Request.Context(), registerReq, role)
 	if err != nil {
 		log.Printf("Error memanggil CreateUser: %v", err)
 		// TODO: Cek error spesifik (misal: "duplicate key" atau "unique constraint")
