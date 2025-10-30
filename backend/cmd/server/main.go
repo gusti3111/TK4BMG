@@ -23,6 +23,7 @@ func main() {
 
 	// 2. Setup Gin Router
 	r := gin.Default()
+	
 
 	// 3. Definisikan API Routes
 	setupRoutes(r)

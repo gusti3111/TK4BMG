@@ -21,24 +21,24 @@ services:
       - postgres_data:/var/lib/postgresql/data 
     restart: always
   # 2. LAYANAN MIGRASI DATABASE (Menjalankan skema SQL)
-  migrate:
-    image: migrate/migrate:v4.16.2 # Image resmi untuk tool golang-migrate
-    container_name: bmg_migrate
-    volumes:
-      # Map folder skrip SQL dari host ke dalam container
-      - ./db/migrations:/app/db/migrations
-    command:
-      # Perintah untuk menjalankan migrasi NAIK (up)
-      # Format URL: postgres://user:password@host:port/dbname?sslmode=disable
-      [
-        "migrate",
-        "-path", "/app/db/migrations",
-        "-database", "postgres://bmguser:secretpassword@db:5432/bmg_db?sslmode=disable",
-        "up"
-      ]
-    depends_on:
-      - db # Wajib menunggu service 'db' siap sebelum migrasi
-    restart: on-failure # Coba lagi jika gagal, misal karena DB belum siap
+  # migrate:
+  #   image: migrate/migrate:v4.16.2 # Image resmi untuk tool golang-migrate
+  #   container_name: bmg_migrate
+  #   volumes:
+  #     # Map folder skrip SQL dari host ke dalam container
+  #     - ./db/migrations:/app/db/migrations
+  #   command:
+  #     # Perintah untuk menjalankan migrasi NAIK (up)
+  #     # Format URL: postgres://user:password@host:port/dbname?sslmode=disable
+  #     [
+  #       "migrate",
+  #       "-path", "/app/db/migrations",
+  #       "-database", "postgres://bmguser:secretpassword@db:5432/bmg_db?sslmode=disable",
+  #       "up"
+  #     ]
+  #   depends_on:
+  #     - db # Wajib menunggu service 'db' siap sebelum migrasi
+  #   restart: on-failure # Coba lagi jika gagal, misal karena DB belum siap
   # LAYANAN BACKEND (GO)
   backend:
     # Build image menggunakan Dockerfile yang baru kita buat
@@ -60,7 +60,18 @@ services:
       - db
     
     restart: always
-
+  # LAYANAN FRONTEND (React)
+  frontend:
+    # Build image menggunakan Dockerfile di folder frontend
+    build:
+      context: ./frontend/my-react-app
+      dockerfile: Dockerfile
+    container_name: bmg_frontend
+    ports:
+      - "5174:80" # Ekspos port 80 (Nginx) ke host pada port 5174
+    depends_on:
+      - backend
+    restart: always
 # Definisi Volume
 volumes:
   postgres_data:
