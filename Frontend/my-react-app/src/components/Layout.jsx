@@ -81,9 +81,9 @@ const Layout = ({ children, currentPage, setCurrentPage, onLogout, userRole = 'u
                 <NavLink
                     icon={ShoppingCart}
                     label="Daftar Belanja"
-                    isActive={currentPage === 'DaftarBelanja'}
+                    isActive={currentPage === 'daftarbelanja'}
                     onClick={() => {
-                        setCurrentPage('DaftarBelanja');
+                        setCurrentPage('daftarbelanja');
                         setIsMobileMenuOpen(false);
                     }}
                     isHidden={userRole !== 'user'} // Sembunyikan jika admin
@@ -91,9 +91,9 @@ const Layout = ({ children, currentPage, setCurrentPage, onLogout, userRole = 'u
                 <NavLink
                     icon={Target}
                     label="Set Budget"
-                    isActive={currentPage === 'set_budget'}
+                    isActive={currentPage === 'setBudget'}
                     onClick={() => {
-                        setCurrentPage('set_budget');
+                        setCurrentPage('setBudget');
                         setIsMobileMenuOpen(false);
                     }}
                     isHidden={userRole !== 'user'} // Sembunyikan jika admin
@@ -101,9 +101,9 @@ const Layout = ({ children, currentPage, setCurrentPage, onLogout, userRole = 'u
                 <NavLink
                     icon={Tags}
                     label="Referensi Belanja"
-                    isActive={currentPage === 'referensi_belanja'}
+                    isActive={currentPage === 'refrensi_belanja'}
                     onClick={() => {
-                        setCurrentPage('referensi_belanja');
+                        setCurrentPage('refrensi_belanja');
                         setIsMobileMenuOpen(false);
                     }}
                     isHidden={userRole !== 'user'} // Sembunyikan jika admin

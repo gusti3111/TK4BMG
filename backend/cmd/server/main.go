@@ -10,6 +10,7 @@ import (
 	"github.com/gusti3111/TKBMG/backend/internal/db"
 	"github.com/gusti3111/TKBMG/backend/internal/handler"
 	"github.com/gusti3111/TKBMG/backend/internal/middleware"
+	"github.com/gusti3111/TKBMG/backend/internal/repository"
 )
 
 func main() {
@@ -23,7 +24,6 @@ func main() {
 
 	// 2. Setup Gin Router
 	r := gin.Default()
-	
 
 	// 3. Definisikan API Routes
 	setupRoutes(r)
@@ -46,8 +46,24 @@ func main() {
 // setupRoutes mendefinisikan semua API endpoint dan menerapkan middleware
 func setupRoutes(r *gin.Engine) {
 	// Inisiasi Handlers (Menggunakan Canvas yang sudah Anda buat)
-	authHandler := handler.NewAuthHandler()
+	authHandler := handler.NewAuthHandler(
+		repository.NewUserRepository(),
+	)
 	itemHandler := handler.NewItemHandler()
+	// Pastikan NewItemRepository diambil dari package yang benar (misal: repository)
+	// Jika sudah ada package repository, gunakan seperti berikut:
+	// import "github.com/gusti3111/TKBMG/backend/internal/repository"
+	// dashHandler := handler.NewDashboardHandler(
+	// 	repository.NewItemRepository(),
+	// )
+
+	// Jika belum ada, buat fungsi NewItemRepository di handler package atau ganti dengan implementasi yang sesuai.
+	// Untuk sementara, gunakan nil jika tidak diperlukan:
+	dashHandler := handler.NewDashboardHandler(
+		repository.NewItemRepository(),
+		repository.NewBudgetRepository(),
+		repository.NewReportRepository(),
+	)
 
 	// 1. Terapkan CORS ke Seluruh Router (untuk komunikasi Frontend)
 	r.Use(middleware.CORSMiddleware())
@@ -72,6 +88,9 @@ func setupRoutes(r *gin.Engine) {
 	{
 		// 1. Item Belanja (Membutuhkan User ID dari Token)
 		secureV1.POST("/items", itemHandler.CreateItem)
+		// === TAMBAHKAN DUA RUTE INI ===
+		secureV1.GET("/dashboard/summary", dashHandler.GetDashboardSummary)
+		secureV1.GET("/dashboard/charts", dashHandler.GetDashboardCharts)
 
 		// 2. Laporan (Area Prioritas Rework dari TK4 - membutuhkan optimasi)
 		secureV1.GET("/reports/weekly", handlerGenerateWeeklyReport) // Handler placeholder

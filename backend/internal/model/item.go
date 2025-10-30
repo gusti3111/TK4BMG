@@ -33,3 +33,42 @@ type Category struct {
 	UserID       int    `json:"id_user"`
 	CategoryName string `json:"nama_kategori" binding:"required"`
 }
+
+// SpendingByCategory adalah struct untuk data Pie Chart
+type SpendingByCategory struct {
+	Kategori string  `json:"kategori" db:"nama_kategori"`
+	Total    float64 `json:"total" db:"total"`
+}
+
+// SpendingByWeek adalah struct untuk data Bar Chart
+type SpendingByWeek struct {
+	MingguKe string  `json:"minggu_ke" db:"minggu"` // Contoh: "W40"
+	Total    float64 `json:"total" db:"total"`
+}
+type SummaryResponse struct {
+	TotalBelanja float64 `json:"total_belanja"`
+	Budget       float64 `json:"budget"`
+	SisaBudget   float64 `json:"sisa_budget"`
+}
+
+// PieChartItem adalah DTO untuk satu potong data di Pie Chart.
+// (Sesuai 'Pengeluaran per Kategori' di mockup TK2).
+// React (Recharts) biasanya mengharapkan 'name' dan 'value'.
+type PieChartItem struct {
+	Name  string  `json:"name"`  // Nama Kategori
+	Value float64 `json:"value"` // Total pengeluaran
+}
+
+// BarChartItem adalah DTO untuk satu batang data di Bar Chart.
+// (Sesuai 'Pengeluaran Mingguan' di mockup TK2).
+type BarChartItem struct {
+	Name        string  `json:"name"`        // Nama minggu (misal: "W40")
+	Pengeluaran float64 `json:"pengeluaran"` // Total pengeluaran
+}
+
+// ChartResponse adalah DTO pembungkus untuk kedua data chart.
+// Ini dikirim oleh endpoint GET /api/v1/dashboard/charts
+type ChartResponse struct {
+	PieChart []PieChartItem `json:"pie_chart"`
+	BarChart []BarChartItem `json:"bar_chart"`
+}

@@ -5,14 +5,37 @@ import {
 } from 'recharts';
 import { Loader, AlertCircle, DollarSign, Target, Activity, TrendingUp, BarChart as BarIcon } from 'lucide-react';
 
-// API Base URL (menggunakan proxy Nginx dari Docker)
-const API_BASE_URL = 'l/api/v1';
+// --- MOCK DATA LOKAL (Digunakan untuk development tanpa backend) ---
+const mockSummary = {
+    total_belanja: 850000,
+    budget: 1200000,
+    sisa_budget: 350000,
+};
+
+const mockCharts = {
+    pie_chart: [
+        { name: 'Makanan', value: 350000 },
+        { name: 'Transportasi', value: 150000 },
+        { name: 'Hiburan', value: 200000 },
+        { name: 'Tagihan', value: 150000 },
+    ],
+    bar_chart: [
+        { name: 'Minggu 1', Pengeluaran: 400000 },
+        { name: 'Minggu 2', Pengeluaran: 300000 },
+        { name: 'Minggu 3', Pengeluaran: 550000 },
+        { name: 'Minggu 4', Pengeluaran: 250000 },
+    ],
+};
+// --- AKHIR MOCK DATA LOKAL ---
+
+
+// API Base URL (Dibiarkan untuk referensi integrasi backend)
+const API_BASE_URL = 'http://localhost:8080/api/v1';
 
 // --- KOMPONEN LOKAL (Untuk menghindari error impor) ---
-// 
 
 /**
- * Komponen StatCard (Sesuai Mockup TK2)
+ * Komponen StatCard (Sesuai Mockup TK2 & props di Dashboard.jsx)
  * @param {object} props
  * @param {string} props.title - Judul kartu (misal: "Total Belanja Mingguan")
  * @param {string} props.value - Nilai yang ditampilkan (misal: "Rp 850.000")
@@ -31,30 +54,30 @@ const StatCard = ({ title, value, icon: Icon, colorClass = 'text-gray-900', bgCo
 );
 
 /**
- * Komponen ChartCard (Wrapper)
+ * Komponen ChartCard (Wrapper - di-inline dari components/ChartCard.jsx)
  * @param {object} props
  * @param {string} props.title - Judul chart
  * @param {React.Node} props.children - Komponen chart dari Recharts
  * @param {React.Component} [props.icon] - Ikon dari Lucide
  */
 const ChartCard = ({ title, children, icon: Icon }) => (
-    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 h-full flex flex-col">
-        <div className="flex items-center justify-between border-b pb-3 mb-4">
-            <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
-            {Icon && <Icon className="w-6 h-6 text-indigo-500" />}
-        </div>
-        {/* Wrapper untuk Recharts agar responsif */}
-        <div className="flex-grow w-full h-72 min-h-[288px]"> 
-            {children}
-        </div>
+  <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 h-full flex flex-col">
+    <div className="flex items-center justify-between border-b pb-3 mb-4">
+        <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
+        {Icon && <Icon className="w-6 h-6 text-indigo-500" />}
     </div>
+    {/* Div dengan tinggi fleksibel untuk menampung ResponsiveContainer dari Recharts */}
+    <div className="flex-grow w-full h-72 min-h-[288px]"> 
+      {children}
+    </div>
+  </div>
 );
 // --- AKHIR KOMPONEN LOKAL ---
 
 
 /**
  * Komponen Halaman Dashboard (sesuai TK2 - Hal 21)
- * Menampilkan ringkasan data dari DaftarBelanja dan Budget.
+ * Menggunakan StatCard dan ChartCard
  */
 const Dashboard = () => {
     
@@ -74,69 +97,38 @@ const Dashboard = () => {
     const [error, setError] = useState(null);
 
     /**
-     * Fungsi helper untuk mengambil data dengan otentikasi (JWT Token)
+     * FUNGSI SIMULASI MENGAMBIL DATA (Menggantikan fetchWithAuth)
+     * Ini menggunakan data dari mockData yang di-inline
      */
-    const fetchWithAuth = useCallback(async (url, options = {}) => {
-        const token = localStorage.getItem('authToken');
-        const headers = {
-            'Content-Type': 'application/json',
-            ...options.headers,
-        };
-        // Tambahkan token ke header jika ada
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        const response = await fetch(url, { ...options, headers });
-
-        if (!response.ok) {
-            // Coba parsing error JSON dari backend Go
-            const errorData = await response.json().catch(() => ({})); // Tangkap jika respons bukan JSON
-            // Prioritaskan pesan error dari backend
-            throw new Error(errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`);
-        }
-        
-        // Cek jika body kosong sebelum parsing JSON
-        const text = await response.text();
-        if (!text) {
-            return null; // Kembalikan null jika body kosong
-        }
-        return JSON.parse(text); // Parsing JSON jika body tidak kosong
-    }, []);
-
-    /**
-     * Mengambil semua data dasbor dari backend
-     */
-    const fetchData = useCallback(async () => {
+    const simulateFetchData = useCallback(() => {
         setIsLoading(true);
         setError(null);
-        try {
-            // 1. Ambil data ringkasan untuk kartu-kartu
-            const summaryData = await fetchWithAuth(`${API_BASE_URL}/dashboard/summary`);
-            if (summaryData) {
-                setSummary(summaryData.data);
-            }
 
-            // 2. Ambil data untuk chart (Pie dan Bar)
-            const chartData = await fetchWithAuth(`${API_BASE_URL}/dashboard/charts`);
-            if (chartData) {
-                setPieData(chartData.data.pie_chart || []);
-                setBarData(chartData.data.bar_chart || []);
+        // Simulasi penundaan jaringan 500ms
+        setTimeout(() => {
+            try {
+                // 1. Ambil data ringkasan dari mockData
+                setSummary(mockSummary);
+                
+                // 2. Ambil data chart dari mockData
+                setPieData(mockCharts.pie_chart || []);
+                setBarData(mockCharts.bar_chart || []);
+                
+            } catch (e) {
+                 setError('Gagal memuat data mock: Format data mungkin salah.');
+            } finally {
+                setIsLoading(false);
             }
+        }, 500); // Penundaan 500ms
 
-        } catch (err) {
-            setError(err.message);
-            console.error("Gagal mengambil data dasbor:", err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [fetchWithAuth]);
+    }, []);
 
     // Hook untuk menjalankan fetchData() saat komponen dimuat
+    // Sekarang memanggil fungsi simulasi
     useEffect(() => {
-        fetchData();
-    }, [fetchData]);
-
+        simulateFetchData();
+    }, [simulateFetchData]);
+    
     // Data dan warna untuk Pie Chart
     const PIE_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF'];
 
@@ -158,20 +150,12 @@ const Dashboard = () => {
         );
     }
     
-    // Tampilan Error Utama
+    // Tampilan Error Utama (Masih dipertahankan, walau tidak akan terpicu jika mock data benar)
     if (error) {
         return (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg" role="alert">
-                <div className="flex">
-                    <div className="py-1">
-                        <AlertCircle className="h-6 w-6 text-red-500 mr-3" />
-                    </div>
-                    <div>
-                        <p className="font-bold">Gagal Mengambil Data</p>
-                        <p className="text-sm">{error}</p>
-                        <p className="text-sm mt-2">Pastikan *backend* Go Anda berjalan dan *endpoint* (<code>/dashboard/summary</code> & <code>/charts</code>) sudah benar.</p>
-                    </div>
-                </div>
+                <p className="font-bold">Gagal Mengambil Data</p>
+                <p className="text-sm">{error}</p>
             </div>
         );
     }
@@ -268,4 +252,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

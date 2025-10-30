@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { User, Mail, Key, Loader } from 'lucide-react';
 
 // Asumsi URL dasar backend Go Anda
-const API_BASE_URL = '/api/v1';
+const API_BASE_URL = 'http://localhost:8080/api/v1';
 
 /**
  * Komponen Formulir Pendaftaran (RegisterForm)
@@ -137,8 +137,8 @@ const RegisterForm = ({ onSwitchToLogin }) => {
                             <User className="h-5 w-5 text-gray-400" />
                         </div>
                         <input
-                            id="name"
-                            name="name"
+                            id="nama"
+                            name="nama"
                             type="text"
                             required
                             className="appearance-none block w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"

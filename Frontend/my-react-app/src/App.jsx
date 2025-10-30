@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 
 // Import komponen kerangka (layout)
 import Layout from '../src/components/Layout'; 
+import '../src/pages/SetBudget';
 // Import halaman aplikasi
+import '../src/pages/RefrensiBelanja';
+import DaftarBelanja from './pages/DaftarBelanja';
 import Dashboard from '../src/pages/Dashboard'; 
 import Reports from '../src/pages/Report'; 
 // Import formulir autentikasi yang sudah dipisahkan
 import LoginForm from './components/LoginForm'; 
 import RegisterForm from './components/RegisterForm'; 
+import SetBudget from '../src/pages/SetBudget';
+import ReferensiBelanja from './pages/RefrensiBelanja';
 
 /**
  * Komponen Utama Aplikasi (Akar)
@@ -43,8 +48,16 @@ const App = () => {
                 return <Dashboard onLogout={handleLogout} />;
             case 'reports':
                 return <Reports onLogout={handleLogout} />;
+            case'daftarbelanja':
+                return <DaftarBelanja onLogout={handleLogout} />;
+            case 'setBudget':
+                return <SetBudget onLogout={handleLogout} />;
+            case 'refrensi_belanja':
+                return <ReferensiBelanja onLogout={handleLogout} />;
             default:
                 return <Dashboard onLogout={handleLogout} />;
+
+               
         }
     };
 

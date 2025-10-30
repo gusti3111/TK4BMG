@@ -83,5 +83,31 @@ func (r *ItemRepository) GetItemsByUserID(ctx context.Context, userID int) ([]mo
 	return items, nil
 }
 
+// --- FUNGSI BARU YANG DIMINTA ---
+
+// GetTotalSpendingByDateRange menghitung total pengeluaran user dalam rentang waktu
+// Fungsi ini dipanggil oleh DashboardHandler
+func (r *ItemRepository) GetTotalSpendingByDateRange(ctx context.Context, userID int, startDate time.Time, endDate time.Time) (float64, error) {
+	// COALESCE digunakan untuk memastikan 0 dikembalikan jika tidak ada data (SUM = NULL)
+	query := `SELECT COALESCE(SUM(total_harga), 0) 
+	          FROM items 
+	          WHERE id_user = $1 AND purchased_date BETWEEN $2 AND $3`
+
+	var totalSpending float64
+
+	// Format tanggal ke string YYYY-MM-DD untuk query SQL
+	startDateStr := startDate.Format("2006-01-02")
+	endDateStr := endDate.Format("2006-01-02")
+
+	err := r.db.QueryRowContext(ctx, query, userID, startDateStr, endDateStr).Scan(&totalSpending)
+	if err != nil {
+		// ErrNoRows tidak akan terjadi karena COALESCE, tapi kita tangani error lain
+		log.Printf("Error calculating total spending for user %d: %v", userID, err)
+		return 0, fmt.Errorf("failed to calculate total spending: %w", err)
+	}
+
+	return totalSpending, nil
+}
+
 // Note: Repository untuk Budget, Category, dan Report akan dibuat di tahap selanjutnya
 // karena fokus awal adalah pada fitur dasar (Login/Register/Tambah Item) dan Rework Laporan.
