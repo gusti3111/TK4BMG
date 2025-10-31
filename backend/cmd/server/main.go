@@ -46,9 +46,7 @@ func main() {
 // setupRoutes mendefinisikan semua API endpoint dan menerapkan middleware
 func setupRoutes(r *gin.Engine) {
 	// Inisiasi Handlers (Menggunakan Canvas yang sudah Anda buat)
-	authHandler := handler.NewAuthHandler(
-		repository.NewUserRepository(),
-	)
+	authHandler := handler.NewAuthHandler()
 	itemHandler := handler.NewItemHandler()
 
 	// Pastikan NewItemRepository diambil dari package yang benar (misal: repository)
