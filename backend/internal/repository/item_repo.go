@@ -24,17 +24,13 @@ func NewItemRepository() *ItemRepository {
 // CreateItem saves a new item into the Items table
 func (r *ItemRepository) CreateItem(ctx context.Context, item *model.Item) error {
 	// TotalCost dihitung di service/handler sebelum dipanggil
-	query := `INSERT INTO items (id_kategori, id_user, nama_item, jumlah_item, harga_satuan, total_harga, purchased_date)
-	          VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	query := `INSERT INTO items (nama_item, jumlah_item, harga_satuan)
+	          VALUES ($1, $2, $3)`
 
 	_, err := r.db.ExecContext(ctx, query,
-		item.CategoryID,
-		item.UserID,
 		item.ItemName,
 		item.Quantity,
 		item.UnitPrice,
-		item.TotalCost,
-		time.Now().Format("2006-01-02"), // Format tanggal saat ini
 	)
 
 	if err != nil {
@@ -47,7 +43,7 @@ func (r *ItemRepository) CreateItem(ctx context.Context, item *model.Item) error
 // GetItemsByUserID fetches all shopping items for a specific user within a timeframe (simple version)
 func (r *ItemRepository) GetItemsByUserID(ctx context.Context, userID int) ([]model.Item, error) {
 	// Query ini bisa dioptimalkan dengan filter tanggal di masa depan (TK4 Rework)
-	query := `SELECT id_item, id_kategori, id_user, nama_item, jumlah_item, harga_satuan, total_harga, purchased_date FROM items WHERE id_user = $1 ORDER BY purchased_date DESC`
+	query := `SELECT id_item, id_kategori, nama_item, jumlah_item, harga_satuan FROM items WHERE id_user = $1 ORDER BY purchased_date DESC`
 
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
@@ -62,12 +58,10 @@ func (r *ItemRepository) GetItemsByUserID(ctx context.Context, userID int) ([]mo
 		err := rows.Scan(
 			&item.ID,
 			&item.CategoryID,
-			&item.UserID,
+
 			&item.ItemName,
 			&item.Quantity,
 			&item.UnitPrice,
-			&item.TotalCost,
-			&item.PurchasedDate,
 		)
 		if err != nil {
 			log.Printf("Error scanning item row: %v", err)

@@ -39,15 +39,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// 2. Validasi input dasar (Menggunakan 'Nama' sesuai ERD TK2)
-	// (Pastikan struct model.User Anda menggunakan json:"nama", json:"email", dll)
-	if req.Username == "" || req.Password == "" || req.Name == "" || req.Email == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Semua field (username, password, nama, email) wajib diisi"})
-		return
-	}
-
 	// 3. Set Role Default (Logika Bisnis di Handler)
-	role := "user"
+	role := "member" // Semua user baru adalah 'member'
 
 	// 4. Panggil Repository (PERBAIKAN ARSITEKTUR)
 	// Buat request sesuai kebutuhan repository
@@ -56,6 +49,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Password: req.Password,
 		Name:     req.Name,
 		Email:    req.Email,
+	}
+
+	// 2. Validasi input dasar (Menggunakan 'Nama' sesuai ERD TK2)
+	// (Pastikan struct model.User Anda menggunakan json:"nama", json:"email", dll)
+	if req.Username == "" || req.Password == "" || req.Name == "" || req.Email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Semua field (username, password, nama, email) wajib diisi"})
+		return
 	}
 
 	err := h.userRepo.CreateUser(c.Request.Context(), registerReq, role)

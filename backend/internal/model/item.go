@@ -6,6 +6,7 @@ import (
 )
 
 // Item represents the data structure for the "Items" entity
+// (BUG #1 FIXED: Mengganti json:\"nama_item\" menjadi json:"nama_item")
 type Item struct {
 	ID            int            `json:"id_item"`
 	UserID        int            `json:"id_user"`
@@ -13,9 +14,15 @@ type Item struct {
 	ItemName      string         `json:"nama_item" binding:"required"`
 	Quantity      int            `json:"jumlah_item" binding:"required"`
 	UnitPrice     float64        `json:"harga_satuan" binding:"required"`
-	TotalCost     float64        `json:"total_harga"` // Dihitung di backend (TK1 requirement)
+	TotalCost     float64        `json:"total_harga"` // Dihitung di backend
 	PurchasedDate time.Time      `json:"purchased_date"`
-	CategoryName  sql.NullString `json:"nama_kategori,omitempty"` // For reporting joins
+	CategoryName  sql.NullString `json:"nama_kategori,omitempty"` // Untuk join
+}
+type ItemRequest struct {
+	CategoryID int     `json:"id_kategori" binding:"required"`
+	ItemName   string  `json:"nama_item" binding:"required"`
+	Quantity   int     `json:"jumlah_item" binding:"required"`
+	UnitPrice  float64 `json:"harga_satuan" binding:"required"`
 }
 
 // Budget represents the data structure for the "Anggaran" entity
@@ -33,6 +40,8 @@ type Category struct {
 	UserID       int    `json:"id_user"`
 	CategoryName string `json:"nama_kategori" binding:"required"`
 }
+
+// === DTO (Data Transfer Objects) untuk Laporan/Dasbor ===
 
 // SpendingByCategory adalah struct untuk data Pie Chart
 type SpendingByCategory struct {
@@ -52,22 +61,18 @@ type SummaryResponse struct {
 }
 
 // PieChartItem adalah DTO untuk satu potong data di Pie Chart.
-// (Sesuai 'Pengeluaran per Kategori' di mockup TK2).
-// React (Recharts) biasanya mengharapkan 'name' dan 'value'.
 type PieChartItem struct {
 	Name  string  `json:"name"`  // Nama Kategori
 	Value float64 `json:"value"` // Total pengeluaran
 }
 
 // BarChartItem adalah DTO untuk satu batang data di Bar Chart.
-// (Sesuai 'Pengeluaran Mingguan' di mockup TK2).
 type BarChartItem struct {
 	Name        string  `json:"name"`        // Nama minggu (misal: "W40")
 	Pengeluaran float64 `json:"pengeluaran"` // Total pengeluaran
 }
 
 // ChartResponse adalah DTO pembungkus untuk kedua data chart.
-// Ini dikirim oleh endpoint GET /api/v1/dashboard/charts
 type ChartResponse struct {
 	PieChart []PieChartItem `json:"pie_chart"`
 	BarChart []BarChartItem `json:"bar_chart"`

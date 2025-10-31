@@ -60,8 +60,8 @@ const DaftarBelanja = () => {
         setIsLoading(true);
         setError(null);
         try {
-            // 1. Ambil daftar kategori (untuk dropdown)
-            // Sesuai 'category_repository.go' -> GET /api/v1/kategori
+            // // 1. Ambil daftar kategori (untuk dropdown)
+            // // Sesuai 'category_repository.go' -> GET /api/v1/kategori
             const kategoriData = await fetchWithAuth(`${API_BASE_URL}/kategori`);
             setKategoriList(kategoriData?.data || []);
 
@@ -102,7 +102,7 @@ const DaftarBelanja = () => {
                 method: 'POST',
                 body: JSON.stringify({
                     nama_item: namaItem,
-                    id_kategori: parseInt(idKategori, 10),
+        
                     jumlah_item: parseInt(jumlah, 10),
                     harga_satuan: parseFloat(harga)
                     // total_harga akan dihitung di backend (Handler/Service)
@@ -111,7 +111,6 @@ const DaftarBelanja = () => {
 
             // Reset form dan ambil ulang data
             setNamaItem('');
-            setIdKategori('');
             setJumlah(1);
             setHarga('');
             await fetchData(); // Refresh tabel
@@ -197,11 +196,11 @@ const DaftarBelanja = () => {
             minimumFractionDigits: 0 
         }).format(value || 0);
 
-    // Mencari nama kategori berdasarkan ID
-    const getCategoryName = (kategoriId) => {
-        const kategori = kategoriList.find(k => k.id_kategori === kategoriId);
-        return kategori ? kategori.nama_kategori : 'Tanpa Kategori';
-    };
+    // // Mencari nama kategori berdasarkan ID
+    // const getCategoryName = (kategoriId) => {
+    //     const kategori = kategoriList.find(k => k.id_kategori === kategoriId);
+    //     return kategori ? kategori.nama_kategori : 'Tanpa Kategori';
+    // };
 
     // Tampilan Loading
     if (isLoading) {
@@ -244,7 +243,7 @@ const DaftarBelanja = () => {
                         />
                     </div>
                     {/* Kategori */}
-                    <div>
+                    {/* <div>
                         <label htmlFor="idKategori" className="block text-sm font-medium text-gray-700">Kategori</label>
                         <select
                             id="idKategori"
@@ -258,7 +257,7 @@ const DaftarBelanja = () => {
                                 <option key={k.id_kategori} value={k.id_kategori}>{k.nama_kategori}</option>
                             ))}
                         </select>
-                    </div>
+                    </div> */}
                     {/* Jumlah */}
                     <div>
                         <label htmlFor="jumlah" className="block text-sm font-medium text-gray-700">Jumlah</label>
@@ -328,12 +327,12 @@ const DaftarBelanja = () => {
                                 items.map((item) => (
                                     <tr key={item.id_item}>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.nama_item}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             <span className="flex items-center">
                                                 <Tag className="h-4 w-4 mr-1.5 text-gray-400" />
                                                 {getCategoryName(item.id_kategori)}
                                             </span>
-                                        </td>
+                                        </td> */}
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.jumlah_item}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatIDR(item.harga_satuan)}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">{formatIDR(item.total_harga)}</td>

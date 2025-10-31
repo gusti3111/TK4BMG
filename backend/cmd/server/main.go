@@ -50,6 +50,7 @@ func setupRoutes(r *gin.Engine) {
 		repository.NewUserRepository(),
 	)
 	itemHandler := handler.NewItemHandler()
+
 	// Pastikan NewItemRepository diambil dari package yang benar (misal: repository)
 	// Jika sudah ada package repository, gunakan seperti berikut:
 	// import "github.com/gusti3111/TKBMG/backend/internal/repository"
@@ -88,12 +89,13 @@ func setupRoutes(r *gin.Engine) {
 	{
 		// 1. Item Belanja (Membutuhkan User ID dari Token)
 		secureV1.POST("/items", itemHandler.CreateItem)
+
 		// === TAMBAHKAN DUA RUTE INI ===
 		secureV1.GET("/dashboard/summary", dashHandler.GetDashboardSummary)
 		secureV1.GET("/dashboard/charts", dashHandler.GetDashboardCharts)
 
 		// 2. Laporan (Area Prioritas Rework dari TK4 - membutuhkan optimasi)
-		secureV1.GET("/reports/weekly", handlerGenerateWeeklyReport) // Handler placeholder
+		// secureV1.GET("/reports/weekly", h) // Handler placeholder
 
 		// 3. Budget (Membutuhkan User ID dari Token)
 		secureV1.POST("/budgets", handleSetBudget)
@@ -101,12 +103,6 @@ func setupRoutes(r *gin.Engine) {
 }
 
 // --- Handler Placeholder Tambahan ---
-
-func handlerGenerateWeeklyReport(c *gin.Context) {
-	// Implementasi di sini akan memanggil Report Service (area Rework)
-	userID := c.GetInt("user_id") // Mengambil User ID dari AuthMiddleware
-	c.JSON(http.StatusOK, gin.H{"message": "Generate Report logic placeholder. User ID:", "user_id": userID})
-}
 
 func handleSetBudget(c *gin.Context) {
 	// Implementasi: Set Budget Mingguan (Membutuhkan User ID dari Token)

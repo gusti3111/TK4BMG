@@ -24,8 +24,8 @@ func NewCategoryRepository() *CategoryRepository {
 // CreateKategori menambahkan kategori baru ke database untuk user tertentu.
 // Ini dipanggil oleh halaman 'Referensi Belanja'.
 func (r *CategoryRepository) CreateKategori(ctx context.Context, kategori *model.Category) error {
-	query := `INSERT INTO referensi_kategori (id_user, nama_kategori)
-	          VALUES ($1, $2) RETURNING id_kategori`
+	query := `INSERT INTO referensi_kategori ( nama_kategori)
+	          VALUES ($1) RETURNING id_kategori`
 
 	// Asumsi Anda telah menambahkan kolom created_at di DB:
 	// query := `INSERT INTO referensi_kategori (id_user, nama_kategori, created_at)
