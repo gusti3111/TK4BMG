@@ -87,6 +87,7 @@ func (r *ItemRepository) GetItemsByUserID(ctx context.Context, userID int) ([]mo
 
 // GetTotalSpendingByDateRange menghitung total pengeluaran user dalam rentang waktu
 // Fungsi ini dipanggil oleh DashboardHandler
+
 func (r *ItemRepository) GetTotalSpendingByDateRange(ctx context.Context, userID int, startDate time.Time, endDate time.Time) (float64, error) {
 	// COALESCE digunakan untuk memastikan 0 dikembalikan jika tidak ada data (SUM = NULL)
 	query := `SELECT COALESCE(SUM(total_harga), 0) 
