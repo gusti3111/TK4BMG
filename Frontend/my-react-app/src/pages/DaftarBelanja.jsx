@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Loader, AlertCircle, Plus, Trash2, Edit, X, Save, Tag } from 'lucide-react';
 
 // API Base URL (untuk development lokal)
-// Pastikan backend Go Anda berjalan di port 8080 dan memiliki CORS
 const API_BASE_URL = 'http://localhost:8080/api/v1';
 
 /**
@@ -56,18 +55,18 @@ const DaftarBelanja = () => {
     /**
      * Mengambil data awal (item belanja dan kategori)
      */
+    // --- PERBAIKAN 1: Menggunakan Promise.all untuk fetch paralel ---
     const fetchData = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
-            // // 1. Ambil daftar kategori (untuk dropdown)
-            // // Sesuai 'category_repository.go' -> GET /api/v1/kategori
-            const kategoriData = await fetchWithAuth(`${API_BASE_URL}/kategori`);
+            // Ambil data kategori dan item secara bersamaan
+            const [kategoriData, itemsData] = await Promise.all([
+                fetchWithAuth(`${API_BASE_URL}/kategori`), // GET /api/v1/kategori
+                fetchWithAuth(`${API_BASE_URL}/items`)     // GET /api/v1/items
+            ]);
+            
             setKategoriList(kategoriData?.data || []);
-
-            // 2. Ambil daftar item belanja
-            // Sesuai 'item_repository.go' -> GET /api/v1/items
-            const itemsData = await fetchWithAuth(`${API_BASE_URL}/items`);
             setItems(itemsData?.data || []);
 
         } catch (err) {
@@ -97,21 +96,19 @@ const DaftarBelanja = () => {
         setError(null);
 
         try {
-            // Sesuai 'item_repository.go' -> POST /api/v1/items
             await fetchWithAuth(`${API_BASE_URL}/items`, {
-  method: 'POST',
-  body: JSON.stringify({
-    id_kategori: parseInt(idKategori, 10),
-    nama_item: namaItem,
-    jumlah_item: parseInt(jumlah, 10),
-    harga_satuan: parseFloat(harga)
-  })
-});
-
-          
+                method: 'POST',
+                body: JSON.stringify({
+                    id_kategori: parseInt(idKategori, 10),
+                    nama_item: namaItem,
+                    jumlah_item: parseInt(jumlah, 10),
+                    harga_satuan: parseFloat(harga)
+                })
+            });
 
             // Reset form dan ambil ulang data
             setNamaItem('');
+            setIdKategori(''); // Reset kategori juga
             setJumlah(1);
             setHarga('');
             await fetchData(); // Refresh tabel
@@ -133,7 +130,6 @@ const DaftarBelanja = () => {
         }
         
         try {
-            // Sesuai 'item_repository.go' -> DELETE /api/v1/items/:id
             await fetchWithAuth(`${API_BASE_URL}/items/${itemID}`, {
                 method: 'DELETE'
             });
@@ -150,7 +146,7 @@ const DaftarBelanja = () => {
     const openEditModal = (item) => {
         setEditingItem({
             ...item,
-            id_kategori: item.id_kategori || '', // Handle null category
+            id_kategori: item.id_kategori || '',
             jumlah_item: item.jumlah_item || 1,
             harga_satuan: item.harga_satuan || 0
         });
@@ -166,7 +162,6 @@ const DaftarBelanja = () => {
         setError(null);
 
         try {
-            // Sesuai 'item_repository.go' -> PUT /api/v1/items/:id
             await fetchWithAuth(`${API_BASE_URL}/items/${editingItem.id_item}`, {
                 method: 'PUT',
                 body: JSON.stringify({
@@ -197,11 +192,12 @@ const DaftarBelanja = () => {
             minimumFractionDigits: 0 
         }).format(value || 0);
 
-    // // Mencari nama kategori berdasarkan ID
-    // const getCategoryName = (kategoriId) => {
-    //     const kategori = kategoriList.find(k => k.id_kategori === kategoriId);
-    //     return kategori ? kategori.nama_kategori : 'Tanpa Kategori';
-    // };
+    // --- PERBAIKAN 2: Uncomment fungsi getCategoryName ---
+    // Mencari nama kategori berdasarkan ID
+    const getCategoryName = (kategoriId) => {
+        const kategori = kategoriList.find(k => k.id_kategori === kategoriId);
+        return kategori ? kategori.nama_kategori : 'Tanpa Kategori';
+    };
 
     // Tampilan Loading
     if (isLoading) {
@@ -212,7 +208,7 @@ const DaftarBelanja = () => {
         );
     }
 
-    // Tampilan Utama (sesuai mockup TK2 Hal. 22)
+    // Tampilan Utama
     return (
         <div className="space-y-6">
             <h1 className="text-3xl font-extrabold text-gray-900">Daftar Belanja</h1>
@@ -224,7 +220,7 @@ const DaftarBelanja = () => {
                 </div>
             )}
 
-            {/* 1. Form "Tambah Item Belanja" (sesuai mockup) */}
+            {/* 1. Form "Tambah Item Belanja" */}
             <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-3">
                     Tambah Item Belanja
@@ -300,7 +296,7 @@ const DaftarBelanja = () => {
                 </form>
             </div>
 
-            {/* 2. Tabel "Daftar Belanja Mingguan" (sesuai mockup) */}
+            {/* 2. Tabel "Daftar Belanja Mingguan" */}
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                 <h2 className="text-xl font-semibold text-gray-800 p-6 border-b">
                     Daftar Belanja Mingguan
@@ -328,12 +324,15 @@ const DaftarBelanja = () => {
                                 items.map((item) => (
                                     <tr key={item.id_item}>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.nama_item}</td>
-                                        {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        
+                                        {/* --- PERBAIKAN 3: Uncomment <td> untuk Kategori --- */}
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             <span className="flex items-center">
                                                 <Tag className="h-4 w-4 mr-1.5 text-gray-400" />
                                                 {getCategoryName(item.id_kategori)}
                                             </span>
-                                        </td> */}
+                                        </td>
+                                        
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.jumlah_item}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatIDR(item.harga_satuan)}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">{formatIDR(item.total_harga)}</td>
@@ -364,7 +363,7 @@ const DaftarBelanja = () => {
                             </button>
                         </div>
                         <form onSubmit={handleUpdateItem} className="space-y-4">
-                            {/* Form fields... sama seperti form tambah */}
+                            {/* Nama Barang */}
                             <div>
                                 <label htmlFor="editNamaItem" className="block text-sm font-medium text-gray-700">Nama Barang</label>
                                 <input
@@ -376,6 +375,7 @@ const DaftarBelanja = () => {
                                     required
                                 />
                             </div>
+                            {/* Kategori */}
                             <div>
                                 <label htmlFor="editIdKategori" className="block text-sm font-medium text-gray-700">Kategori</label>
                                 <select
@@ -391,6 +391,7 @@ const DaftarBelanja = () => {
                                     ))}
                                 </select>
                             </div>
+                            {/* Jumlah */}
                             <div>
                                 <label htmlFor="editJumlah" className="block text-sm font-medium text-gray-700">Jumlah</label>
                                 <input
@@ -403,6 +404,7 @@ const DaftarBelanja = () => {
                                     required
                                 />
                             </div>
+                            {/* Harga Satuan */}
                             <div>
                                 <label htmlFor="editHarga" className="block text-sm font-medium text-gray-700">Harga Satuan (Rp)</label>
                                 <input
@@ -415,6 +417,7 @@ const DaftarBelanja = () => {
                                     required
                                 />
                             </div>
+                            {/* Tombol Modal */}
                             <div className="flex justify-end pt-4 border-t">
                                 <button
                                     type="button"
@@ -426,7 +429,7 @@ const DaftarBelanja = () => {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="flex items-center justify-center py-2 px-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-indigo-500 disabled:bg-gray-400"
+                                    className="flex items-center justify-center py-2 px-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
                                 >
                                     {isSubmitting ? <Loader className="animate-spin h-5 w-5 mr-2" /> : <Save className="h-5 w-5 mr-2" />}
                                     Simpan Perubahan
@@ -441,4 +444,3 @@ const DaftarBelanja = () => {
 };
 
 export default DaftarBelanja;
-

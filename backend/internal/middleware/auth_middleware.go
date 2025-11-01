@@ -6,13 +6,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/gusti3111/TKBMG/backend/internal/config" // <-- 1. IMPORT CONFIG
 )
 
-var jwtSecretKey = []byte("your-very-secret-key")
+// var jwtSecretKey = []byte("your-very-secret-key") // <-- 2. HAPUS BARIS INI
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
+
+		// <-- 3. PERBAIKAN LOGIKA: Cek string kosong, bukan spasi
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header diperlukan"})
 			c.Abort()
@@ -33,7 +36,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
-			return jwtSecretKey, nil
+			// <-- 4. GUNAKAN SECRET KEY DARI CONFIG
+			return config.JWTSecretKey, nil
 		})
 
 		if err != nil || !token.Valid {

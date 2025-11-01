@@ -78,11 +78,22 @@ func setupRoutes(r *gin.Engine) {
 		secureV1.GET("/dashboard/summary", dashHandler.GetDashboardSummary)
 		secureV1.GET("/dashboard/charts", dashHandler.GetDashboardCharts)
 
+		// ======================================================
+		// ================ PERBAIKAN RUTE ITEMS ================
+		// ======================================================
+
 		// Items
 		secureV1.POST("/items", itemHandler.CreateItem)
-		secureV1.GET("/items/:id", itemHandler.GetItems)
-		// secureV1.PUT("/items/:id", itemHandler.UpdateItem)
-		// secureV1.DELETE("/items/:id", itemHandler.DeleteItem)
+
+		// PERBAIKAN 1: Rute ini seharusnya /items, bukan /items/:id
+		// Handler GetItems mengambil semua item milik user (dari token)
+		secureV1.GET("/items", itemHandler.GetItems)
+
+		// PERBAIKAN 2 & 3: Rute PUT dan DELETE di-uncomment
+		secureV1.PUT("/items/:id", itemHandler.UpdateItem)
+		secureV1.DELETE("/items/:id", itemHandler.DeleteItem)
+
+		// ======================================================
 
 		// Kategori
 		secureV1.POST("/kategori", categoryHandler.CreateCategory)

@@ -3,16 +3,16 @@ package handler
 import (
 	"log"
 	"net/http"
-	"time"
 
+	// "time" // Tidak perlu lagi
+	// "github.com/golang-jwt/jwt/v5" // Tidak perlu lagi
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/gusti3111/TKBMG/backend/internal/model"
 	"github.com/gusti3111/TKBMG/backend/internal/service"
-	"golang.org/x/crypto/bcrypt"
+	// "golang.org/x/crypto/bcrypt" // Tidak perlu lagi
 )
 
-var jwtSecretKey = []byte("your-very-secret-key") // replace with a secure key or load from env
+// var jwtSecretKey = []byte("your-very-secret-key") // HAPUS: Ini penyebab bug
 
 // AuthHandler holds the dependencies for authentication APIs
 type AuthHandler struct {
@@ -28,10 +28,11 @@ func NewAuthHandler() *AuthHandler {
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req model.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Input tidak valid"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Input tidak valid", "details": err.Error()})
 		return
 	}
 
+	// Delegasikan semua logika registrasi ke service
 	if err := h.authService.RegisterUser(c.Request.Context(), &req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -41,78 +42,37 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 // Login handles POST /v1/login
+// (INI FUNGSI YANG DIPERBAIKI TOTAL)
 func (h *AuthHandler) Login(c *gin.Context) {
-	var req struct {
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
 
-	// 1. Bind JSON
+	// 1. Gunakan model.LoginRequest, bukan struct anonim
+	var req model.LoginRequest
+
+	// 2. Bind JSON
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Username dan password wajib diisi"})
 		return
 	}
 
-	// 2. Dapatkan User dari Repo (dari file user_repository.go Anda)
-	user, err := h.authService.GetUserByUsername(c.Request.Context(), req.Username)
+	// 3. Panggil SATU fungsi service Login
+	// Service akan menangani (get user, check pass, create token)
+	loginResponse, err := h.authService.Login(c.Request.Context(), &req)
 	if err != nil {
-		// User tidak ditemukan
-		log.Printf("Login gagal (user not found): %v", err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Username atau password salah"})
+		// Service akan mengembalikan error "username atau password salah"
+		log.Printf("Login gagal untuk user: %s, error: %v", req.Username, err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	// 3. Bandingkan Password
-	// (Diasumsikan repo GetUserByUsername mengembalikan HASH password)
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
-	if err != nil {
-		// Password tidak cocok
-		log.Printf("Login gagal (password mismatch) untuk user: %s", req.Username)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Username atau password salah"})
-		return
-	}
-
-	// 4. Buat Token JWT
-	token, err := createJWT(user)
-	if err != nil {
-		log.Printf("Error membuat token JWT: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat token"})
-		return
-	}
-
-	// 5. Kirim Token sebagai Respons
+	// 4. Kirim Token dari service sebagai Respons
+	// loginResponse sudah berisi Token dan Role
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login berhasil!",
-		"token":   token,
-		"user": gin.H{ // Kirim data user (tanpa password)
-			"id":       user.ID,
-			"username": user.Username,
-			"nama":     user.Name, // (Menggunakan 'Nama' sesuai ERD TK2)
-			"email":    user.Email,
-			"role":     user.Role,
-		},
+		"token":   loginResponse.Token,
+		"role":    loginResponse.Role,
 	})
 }
 
-// createJWT adalah fungsi helper untuk membuat token
-func createJWT(user *model.User) (string, error) {
-	// Buat claims (payload)
-	claims := jwt.MapClaims{
-		"sub":  user.ID, // Subject (User ID)
-		"user": user.Username,
-		"role": user.Role,
-		"exp":  time.Now().Add(time.Hour * 24).Unix(), // Expired dalam 24 jam
-		"iat":  time.Now().Unix(),                     // Issued At
-	}
-
-	// Buat token dengan signing method HS256
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	// Tandatangani token dengan secret key
-	tokenString, err := token.SignedString(jwtSecretKey)
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-}
+// HAPUS FUNGSI createJWT()
+// func createJWT(user *model.User) (string, error) { ... }
+// Fungsi ini tidak diperlukan lagi di handler, karena service sudah menanganinya.

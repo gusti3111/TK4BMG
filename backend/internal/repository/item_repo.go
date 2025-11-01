@@ -23,15 +23,23 @@ func NewItemRepository() *ItemRepository {
 
 // CreateItem saves a new item into the Items table
 func (r *ItemRepository) CreateItem(ctx context.Context, item *model.Item) error {
-	// TotalCost dihitung di service/handler sebelum dipanggil
-	query := `INSERT INTO items (nama_item, jumlah_item, harga_satuan)
-	          VALUES ($1, $2, $3)`
+
+	// ==================== PERBAIKAN DI SINI ====================
+	// Query sebelumnya hanya menyimpan 3 kolom.
+	// Query baru ini menyimpan semua 7 kolom yang relevan.
+	query := `INSERT INTO items (id_user, id_kategori, nama_item, jumlah_item, harga_satuan, total_harga, purchased_date)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
 	_, err := r.db.ExecContext(ctx, query,
-		item.ItemName,
-		item.Quantity,
-		item.UnitPrice,
+		item.UserID,        // $1
+		item.CategoryID,    // $2
+		item.ItemName,      // $3
+		item.Quantity,      // $4
+		item.UnitPrice,     // $5
+		item.TotalCost,     // $6
+		item.PurchasedDate, // $7
 	)
+	// =========================================================
 
 	if err != nil {
 		log.Printf("Error inserting item: %v", err)

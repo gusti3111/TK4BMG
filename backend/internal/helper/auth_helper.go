@@ -10,7 +10,12 @@ import (
 // GetUserID mengambil userID dari context yang diisi oleh middleware JWT.
 // Fungsi ini bisa dipakai ulang di semua handler.
 func GetUserID(c *gin.Context) (int, bool) {
-	userIDValue, exists := c.Get("userID")
+
+	// <-- PERBAIKAN BUG UTAMA DI SINI:
+	// Ganti "userID" (camelCase) menjadi "user_id" (snake_case)
+	// agar cocok dengan yang di-set di auth_middleware.go (c.Set("user_id", ...))
+	userIDValue, exists := c.Get("user_id")
+
 	if !exists {
 		log.Println("[Helper] UserID tidak ditemukan di context (JWT mungkin tidak valid)")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Tidak terotentikasi"})
