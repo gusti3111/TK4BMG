@@ -1,40 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Loader, AlertCircle, Plus, Edit, Trash2, X } from 'lucide-react';
 
-// === CATATAN PENTING MENGENAI ERROR "404: Not Found" ===
-//
-// Error "404: Not Found" yang Anda lihat di console BUKAN error di file frontend ini.
-// File ini (ReferensiBelanja.jsx) sudah BENAR.
-//
-// Error 404 berarti:
-// 1. Frontend Anda (React) BERHASIL mengirim permintaan ke `http://localhost:8080/api/v1/kategori`.
-// 2. Backend Go Anda (di port 8080) MENJAWAB, tetapi ia TIDAK MEMILIKI endpoint/rute yang terdaftar untuk "GET /api/v1/kategori".
-//
-// === SOLUSI ===
-// Buka file backend Go Anda (kemungkinan `main.go` atau `setupRoutes.go`).
-// Temukan bagian `secureV1 := r.Group("/api/v1")`.
-// Pastikan Anda telah mendaftarkan rute untuk CategoryHandler seperti ini:
-//
-//    // ... inisialisasi handler ...
-//    categoryRepo := repository.NewCategoryRepository()
-//    categoryHandler := handler.NewCategoryHandler(categoryRepo)
-//
-//    secureV1.Use(middleware.AuthMiddleware())
-//    {
-//        // ... rute Anda yang lain ...
-//
-//        // PASTIKAN RUTE INI ADA DAN TIDAK DI-COMMENT (TIDAK ADA TANDA //)
-//        secureV1.GET("/kategori", categoryHandler.GetCategories)
-//        secureV1.POST("/kategori", categoryHandler.CreateCategory)
-//        secureV1.PUT("/kategori/:id", categoryHandler.UpdateCategory)
-//        secureV1.DELETE("/kategori/:id", categoryHandler.DeleteCategory)
-//    }
-//
-// Setelah Anda mendaftarkan rute ini di backend Go dan me-restart server Go Anda, error 404 akan hilang.
-// ========================================================
-
-// API Base URL (untuk development lokal, sesuaikan jika perlu)
-// Pastikan backend Go Anda berjalan di port 8080 dan memiliki CORS
 const API_BASE_URL = 'http://localhost:8080/api/v1';
 
 /**

@@ -48,6 +48,7 @@ func setupRoutes(r *gin.Engine) {
 	categoryRepo := repository.NewCategoryRepository()
 	budgetRepo := repository.NewBudgetRepository()
 	reportRepo := repository.NewReportRepository()
+	budgetHandler := handler.NewBudgetHandler(budgetRepo)
 
 	// --- Inisialisasi Handler ---
 	authHandler := handler.NewAuthHandler()
@@ -102,15 +103,6 @@ func setupRoutes(r *gin.Engine) {
 		secureV1.DELETE("/kategori/:id", categoryHandler.DeleteCategory)
 
 		// Budget
-		secureV1.POST("/budgets", handleSetBudget)
+		secureV1.POST("/budgets", budgetHandler.SetBudget)
 	}
-}
-
-// Placeholder Handler Budget
-func handleSetBudget(c *gin.Context) {
-	userID := c.GetInt("user_id")
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Set Budget logic placeholder",
-		"user_id": userID,
-	})
 }

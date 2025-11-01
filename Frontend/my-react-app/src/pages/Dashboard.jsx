@@ -1,48 +1,20 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // <-- 1. Tambahkan useCallback
 import { 
     PieChart, Pie, Cell, ResponsiveContainer, 
     BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid 
 } from 'recharts';
 import { Loader, AlertCircle, DollarSign, Target, Activity, TrendingUp, BarChart as BarIcon } from 'lucide-react';
 
-// --- MOCK DATA LOKAL (Digunakan untuk development tanpa backend) ---
-const mockSummary = {
-    total_belanja: 850000,
-    budget: 1200000,
-    sisa_budget: 350000,
-};
-
-const mockCharts = {
-    pie_chart: [
-        { name: 'Makanan', value: 350000 },
-        { name: 'Transportasi', value: 150000 },
-        { name: 'Hiburan', value: 200000 },
-        { name: 'Tagihan', value: 150000 },
-    ],
-    bar_chart: [
-        { name: 'Minggu 1', Pengeluaran: 400000 },
-        { name: 'Minggu 2', Pengeluaran: 300000 },
-        { name: 'Minggu 3', Pengeluaran: 550000 },
-        { name: 'Minggu 4', Pengeluaran: 250000 },
-    ],
-};
+// --- MOCK DATA LOKAL (DIHAPUS) ---
+// const mockSummary = { ... };
+// const mockCharts = { ... };
 // --- AKHIR MOCK DATA LOKAL ---
 
 
-// API Base URL (Dibiarkan untuk referensi integrasi backend)
+// API Base URL (Sekarang akan kita gunakan)
 const API_BASE_URL = 'http://localhost:8080/api/v1';
 
-// --- KOMPONEN LOKAL (Untuk menghindari error impor) ---
-
-/**
- * Komponen StatCard (Sesuai Mockup TK2 & props di Dashboard.jsx)
- * @param {object} props
- * @param {string} props.title - Judul kartu (misal: "Total Belanja Mingguan")
- * @param {string} props.value - Nilai yang ditampilkan (misal: "Rp 850.000")
- * @param {React.Component} props.icon - Ikon dari Lucide
- * @param {string} [props.colorClass] - Kelas warna Tailwind untuk nilai (misal: "text-red-600")
- * @param {string} [props.bgColorClass] - Kelas warna background (misal: "bg-red-50")
- */
+// --- KOMPONEN LOKAL (StatCard dan ChartCard tidak berubah) ---
 const StatCard = ({ title, value, icon: Icon, colorClass = 'text-gray-900', bgColorClass = 'bg-gray-50' }) => (
     <div className={`p-5 rounded-xl shadow-lg border border-gray-200 ${bgColorClass}`}>
         <div className="flex items-center justify-between mb-2">
@@ -53,20 +25,12 @@ const StatCard = ({ title, value, icon: Icon, colorClass = 'text-gray-900', bgCo
     </div>
 );
 
-/**
- * Komponen ChartCard (Wrapper - di-inline dari components/ChartCard.jsx)
- * @param {object} props
- * @param {string} props.title - Judul chart
- * @param {React.Node} props.children - Komponen chart dari Recharts
- * @param {React.Component} [props.icon] - Ikon dari Lucide
- */
 const ChartCard = ({ title, children, icon: Icon }) => (
   <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 h-full flex flex-col">
     <div className="flex items-center justify-between border-b pb-3 mb-4">
         <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
         {Icon && <Icon className="w-6 h-6 text-indigo-500" />}
     </div>
-    {/* Div dengan tinggi fleksibel untuk menampung ResponsiveContainer dari Recharts */}
     <div className="flex-grow w-full h-72 min-h-[288px]"> 
       {children}
     </div>
@@ -76,71 +40,101 @@ const ChartCard = ({ title, children, icon: Icon }) => (
 
 
 /**
- * Komponen Halaman Dashboard (sesuai TK2 - Hal 21)
- * Menggunakan StatCard dan ChartCard
+ * Komponen Halaman Dashboard
  */
 const Dashboard = () => {
     
-    // State untuk data ringkasan (kartu)
+    // State (tidak berubah)
     const [summary, setSummary] = useState({
         total_belanja: 0,
         budget: 0,
         sisa_budget: 0,
     });
-    
-    // State untuk data chart
     const [pieData, setPieData] = useState([]);
     const [barData, setBarData] = useState([]);
-    
-    // State UI
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    
+    // --- PERBAIKAN 2: Tambahkan helper fetchWithAuth ---
+    const fetchWithAuth = useCallback(async (url, options = {}) => {
+        const token = localStorage.getItem('authToken');
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options.headers,
+        };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        const response = await fetch(url, { ...options, headers });
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`);
+        }
+        const text = await response.text();
+        return text ? JSON.parse(text) : null;
+    }, []);
+
+
+    // --- PERBAIKAN 3: Ganti simulateFetchData dengan fetchData asli ---
     /**
-     * FUNGSI SIMULASI MENGAMBIL DATA (Menggantikan fetchWithAuth)
-     * Ini menggunakan data dari mockData yang di-inline
+     * Mengambil data dashboard dari API backend
      */
-    const simulateFetchData = useCallback(() => {
+    const fetchData = useCallback(async () => {
         setIsLoading(true);
         setError(null);
 
-        // Simulasi penundaan jaringan 500ms
-        setTimeout(() => {
-            try {
-                // 1. Ambil data ringkasan dari mockData
-                setSummary(mockSummary);
-                
-                // 2. Ambil data chart dari mockData
-                setPieData(mockCharts.pie_chart || []);
-                setBarData(mockCharts.bar_chart || []);
-                
-            } catch (e) {
-                 setError('Gagal memuat data mock: Format data mungkin salah.');
-            } finally {
-                setIsLoading(false);
-            }
-        }, 500); // Penundaan 500ms
+        try {
+            // Panggil kedua endpoint secara bersamaan
+            const [summaryData, chartsData] = await Promise.all([
+                fetchWithAuth(`${API_BASE_URL}/dashboard/summary`),
+                fetchWithAuth(`${API_BASE_URL}/dashboard/charts`)
+            ]);
 
-    }, []);
+            // 1. Set data ringkasan (StatCards)
+            // Backend mengirim: { "data": { "total_belanja": ... } }
+            if (summaryData && summaryData.data) {
+                setSummary(summaryData.data);
+            } else {
+                setSummary({ total_belanja: 0, budget: 0, sisa_budget: 0 });
+            }
+
+            // 2. Set data chart
+            // Backend mengirim: { "data": { "pie_chart": [...], "bar_chart": [...] } }
+            if (chartsData && chartsData.data) {
+                setPieData(chartsData.data.pie_chart || []);
+                setBarData(chartsData.data.bar_chart || []);
+            } else {
+                setPieData([]);
+                setBarData([]);
+            }
+            
+        } catch (err) {
+            setError(err.message);
+            console.error("Gagal mengambil data dashboard:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [fetchWithAuth]); // Tambahkan dependensi fetchWithAuth
 
     // Hook untuk menjalankan fetchData() saat komponen dimuat
-    // Sekarang memanggil fungsi simulasi
+    // --- PERBAIKAN 4: Panggil fetchData ---
     useEffect(() => {
-        simulateFetchData();
-    }, [simulateFetchData]);
+        fetchData();
+    }, [fetchData]);
     
-    // Data dan warna untuk Pie Chart
+    // Data dan warna untuk Pie Chart (tidak berubah)
     const PIE_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF'];
 
-    // Format mata uang Rupiah
+    // Format mata uang Rupiah (tidak berubah)
     const formatIDR = (value) => 
         new Intl.NumberFormat('id-ID', { 
             style: 'currency', 
             currency: 'IDR', 
             minimumFractionDigits: 0 
-        }).format(value || 0); // Pastikan value tidak null/undefined
+        }).format(value || 0);
 
-    // Tampilan Loading
+    // Tampilan Loading (tidak berubah)
     if (isLoading) {
         return (
             <div className="flex justify-center items-center h-96">
@@ -150,12 +144,17 @@ const Dashboard = () => {
         );
     }
     
-    // Tampilan Error Utama (Masih dipertahankan, walau tidak akan terpicu jika mock data benar)
+    // Tampilan Error Utama (tidak berubah)
     if (error) {
         return (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg" role="alert">
-                <p className="font-bold">Gagal Mengambil Data</p>
-                <p className="text-sm">{error}</p>
+                <div className="flex">
+                    <div className="py-1"><AlertCircle className="h-6 w-6 text-red-500 mr-3" /></div>
+                    <div>
+                        <p className="font-bold">Gagal Mengambil Data</p>
+                        <p className="text-sm">{error}</p>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -163,8 +162,7 @@ const Dashboard = () => {
     // Tampilan Utama (sesuai mockup TK2 Hal. 21)
     return (
         <div className="space-y-6">
-            {/* 1. Kartu Statistik (Sesuai Mockup TK2) */}
-            {/* Dibuat responsif: 1 kolom di HP, 3 kolom di tablet/desktop */}
+            {/* 1. Kartu Statistik (tidak berubah) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard 
                     title="Total Belanja Mingguan" 
@@ -189,11 +187,10 @@ const Dashboard = () => {
                 />
             </div>
 
-            {/* 2. Charts (Sesuai Mockup TK2) */}
-            {/* Dibuat responsif: 1 kolom di HP, 2 kolom (berbeda rasio) di layar besar */}
+            {/* 2. Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 
-                {/* Pie Chart (Pengeluaran per Kategori) */}
+                {/* Pie Chart (tidak berubah) */}
                 <div className="lg:col-span-2">
                     <ChartCard title="Pengeluaran per Kategori" icon={TrendingUp}>
                         {pieData.length > 0 ? (
@@ -206,7 +203,7 @@ const Dashboard = () => {
                                         labelLine={false}
                                         outerRadius={100}
                                         fill="#8884d8"
-                                        dataKey="value"
+                                        dataKey="value" // 'value' sesuai dengan model PieChartItem di backend
                                         label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
                                     >
                                         {pieData.map((entry, index) => (
@@ -236,7 +233,10 @@ const Dashboard = () => {
                                     <YAxis stroke="#6b7280" tickFormatter={(value) => `${formatIDR(value).replace('Rp', '')}`} />
                                     <Tooltip formatter={(value) => formatIDR(value)} />
                                     <Legend />
-                                    <Bar dataKey="Pengeluaran" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                                    
+                                    {/* --- PERBAIKAN 5: 'Pengeluaran' -> 'pengeluaran' --- */}
+                                    {/* Backend mengirim 'pengeluaran' (lowercase) sesuai JSON tag */}
+                                    <Bar dataKey="pengeluaran" fill="#4f46e5" radius={[4, 4, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
                         ) : (
