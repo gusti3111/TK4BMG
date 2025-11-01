@@ -51,7 +51,7 @@ func (r *ItemRepository) CreateItem(ctx context.Context, item *model.Item) error
 // GetItemsByUserID fetches all shopping items for a specific user within a timeframe (simple version)
 func (r *ItemRepository) GetItemsByUserID(ctx context.Context, userID int) ([]model.Item, error) {
 	// Query ini bisa dioptimalkan dengan filter tanggal di masa depan (TK4 Rework)
-	query := `SELECT id_item, id_kategori, nama_item, jumlah_item, harga_satuan FROM items WHERE id_user = $1 ORDER BY purchased_date DESC`
+	query := `SELECT id_item, id_kategori, nama_item, jumlah_item, harga_satuan,total_harga FROM items WHERE id_user = $1 ORDER BY purchased_date DESC`
 
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
@@ -70,6 +70,7 @@ func (r *ItemRepository) GetItemsByUserID(ctx context.Context, userID int) ([]mo
 			&item.ItemName,
 			&item.Quantity,
 			&item.UnitPrice,
+			&item.TotalCost, // Meskipun tidak diambil di query, siapkan untuk penggunaan di masa depan
 		)
 		if err != nil {
 			log.Printf("Error scanning item row: %v", err)

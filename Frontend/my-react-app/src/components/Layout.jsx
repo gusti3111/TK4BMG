@@ -61,7 +61,7 @@ const Layout = ({ children, currentPage, setCurrentPage, onLogout, userRole = 'u
             <div className="flex items-center justify-center h-16 mb-6">
                  <DollarSign className="w-10 h-10 text-white mr-2" />
                 <span className="text-2xl font-bold text-white">
-                    BMG
+                    BELANJA MINGGUAN GUE
                 </span>
             </div>
             

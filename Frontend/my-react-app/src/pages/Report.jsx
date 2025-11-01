@@ -152,9 +152,10 @@ const Reports = () => {
     return (
         <div className="p-4 sm:p-6 lg:p-8 bg-gray-100 min-h-screen">
             {/* --- 4. Tambahkan Tombol Download di Samping Judul --- */}
+
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
                 <h2 className="text-3xl font-extrabold text-gray-900 flex items-center mb-4 sm:mb-0">
-                    <BarChart3 className="w-8 h-8 mr-3 text-indigo-600" />
+                    <BarChart3 className="w-8 h-8  text-indigo-600" />
                     Laporan Pengeluaran Bulanan
                 </h2>
                 <button
@@ -192,11 +193,43 @@ const Reports = () => {
                 {/* Visualisasi Bar Chart */}
                 <div className="lg:col-span-2">
                     {/* ... (ChartCard) ... */}
+                    <ChartCard title="Distribusi Pengeluaran per Kategori" icon={BarIcon}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={reportData} margin={{ top: 20, right: 20, left: 20, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="category" />
+                                <YAxis />
+                                <Tooltip formatter={(value) => formatCurrency(value)} />
+                                <Legend />
+                                <RechartsBar dataKey="value" fill="#6366F1" name="Pengeluaran" />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </ChartCard>
+
                 </div>
 
                 {/* Detail Tabel Pengeluaran */}
                 <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
                     {/* ... (Rincian Kategori) ... */}
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4">Rincian Kategori</h3>              
+                    <table className="w-full table-auto">
+                        <thead>
+                            <tr className="bg-gray-100">
+                                <th className="px-4 py-2 text-left text-sm font-medium text-red-600">Kategori</th>
+                                <th className="px-4 py-2 text-right text-sm font-medium text-red-600">Jumlah Pengeluaran</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {reportData.map((item, index) => (
+
+                                <tr key={index} className={index % 2 === 0 ? 'bg-red' : 'bg-gray-50'}>
+                                    <td className="px-4 py-2 text-sm text-gray-700">{item.nama_item}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-700 text-right">{formatCurrency(item.value)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    
                 </div>
             </div>
         </div>

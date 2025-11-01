@@ -65,10 +65,10 @@ const SetBudget = () => {
                 const persen = budget > 0 ? (terpakai / budget) * 100 : 0;
                 
                 setSummary({
-                    budget: budget,
-                    terpakai: terpakai,
-                    sisa: sisa,
-                    persen_terpakai: persen.toFixed(0)
+                    budget: summary.budget,
+                    terpakai: summary.terpakai,
+                    sisa: summary.sisa,
+                    persen_terpakai: summary.persen_terpakai
                 });
                 
                 setNominalBudget(budget.toString());
