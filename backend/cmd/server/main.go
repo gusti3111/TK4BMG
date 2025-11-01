@@ -48,13 +48,16 @@ func setupRoutes(r *gin.Engine) {
 	categoryRepo := repository.NewCategoryRepository()
 	budgetRepo := repository.NewBudgetRepository()
 	reportRepo := repository.NewReportRepository()
-	budgetHandler := handler.NewBudgetHandler(budgetRepo)
 
 	// --- Inisialisasi Handler ---
 	authHandler := handler.NewAuthHandler()
 	categoryHandler := handler.NewCategoryHandler(categoryRepo)
 	itemHandler := handler.NewItemHandler(itemRepo, categoryRepo)
 	dashHandler := handler.NewDashboardHandler(itemRepo, budgetRepo, reportRepo)
+	budgetHandler := handler.NewBudgetHandler(budgetRepo)
+
+	// Variabel yang menyebabkan error 'declared and not used'
+	reportHandler := handler.NewReportHandler(reportRepo)
 
 	// Terapkan CORS untuk semua endpoint
 	r.Use(middleware.CORSMiddleware())
@@ -79,22 +82,11 @@ func setupRoutes(r *gin.Engine) {
 		secureV1.GET("/dashboard/summary", dashHandler.GetDashboardSummary)
 		secureV1.GET("/dashboard/charts", dashHandler.GetDashboardCharts)
 
-		// ======================================================
-		// ================ PERBAIKAN RUTE ITEMS ================
-		// ======================================================
-
 		// Items
 		secureV1.POST("/items", itemHandler.CreateItem)
-
-		// PERBAIKAN 1: Rute ini seharusnya /items, bukan /items/:id
-		// Handler GetItems mengambil semua item milik user (dari token)
 		secureV1.GET("/items", itemHandler.GetItems)
-
-		// PERBAIKAN 2 & 3: Rute PUT dan DELETE di-uncomment
 		secureV1.PUT("/items/:id", itemHandler.UpdateItem)
 		secureV1.DELETE("/items/:id", itemHandler.DeleteItem)
-
-		// ======================================================
 
 		// Kategori
 		secureV1.POST("/kategori", categoryHandler.CreateCategory)
@@ -104,5 +96,8 @@ func setupRoutes(r *gin.Engine) {
 
 		// Budget
 		secureV1.POST("/budgets", budgetHandler.SetBudget)
+
+		// Reports
+		secureV1.GET("/reports/download", reportHandler.GenerateReport)
 	}
 }
