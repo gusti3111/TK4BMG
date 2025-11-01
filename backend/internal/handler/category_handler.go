@@ -159,23 +159,3 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 }
 
 // --- HELPER ---
-
-// getUserID adalah helper internal untuk mengambil ID user dari context Gin
-// (diasumsikan AuthMiddleware Anda menyimpannya sebagai "userID")
-func getUserID(c *gin.Context) (int, bool) {
-	userIDValue, exists := c.Get("userID")
-	if !exists {
-		log.Println("Handler Error: User ID not found in token context (middleware failed?)")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Tidak terotentikasi"})
-		return 0, false
-	}
-
-	userID, ok := userIDValue.(int) // Sesuaikan tipe data ini (int, int64, string)
-	if !ok {
-		log.Println("Handler Error: Invalid User ID format in token context")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Format User ID tidak valid"})
-		return 0, false
-	}
-
-	return userID, true
-}

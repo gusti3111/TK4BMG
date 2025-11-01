@@ -99,15 +99,16 @@ const DaftarBelanja = () => {
         try {
             // Sesuai 'item_repository.go' -> POST /api/v1/items
             await fetchWithAuth(`${API_BASE_URL}/items`, {
-                method: 'POST',
-                body: JSON.stringify({
-                    nama_item: namaItem,
-        
-                    jumlah_item: parseInt(jumlah, 10),
-                    harga_satuan: parseFloat(harga)
-                    // total_harga akan dihitung di backend (Handler/Service)
-                })
-            });
+  method: 'POST',
+  body: JSON.stringify({
+    id_kategori: parseInt(idKategori, 10),
+    nama_item: namaItem,
+    jumlah_item: parseInt(jumlah, 10),
+    harga_satuan: parseFloat(harga)
+  })
+});
+
+          
 
             // Reset form dan ambil ulang data
             setNamaItem('');
@@ -243,7 +244,7 @@ const DaftarBelanja = () => {
                         />
                     </div>
                     {/* Kategori */}
-                    {/* <div>
+                    <div>
                         <label htmlFor="idKategori" className="block text-sm font-medium text-gray-700">Kategori</label>
                         <select
                             id="idKategori"
@@ -257,7 +258,7 @@ const DaftarBelanja = () => {
                                 <option key={k.id_kategori} value={k.id_kategori}>{k.nama_kategori}</option>
                             ))}
                         </select>
-                    </div> */}
+                    </div> 
                     {/* Jumlah */}
                     <div>
                         <label htmlFor="jumlah" className="block text-sm font-medium text-gray-700">Jumlah</label>

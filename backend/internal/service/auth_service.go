@@ -72,3 +72,8 @@ func (s *AuthService) Login(ctx context.Context, req *model.LoginRequest) (*mode
 
 	return &model.LoginResponse{Token: token, Role: user.Role}, nil
 }
+
+func (s *AuthService) GetUserByUsername(ctx context.Context, username string) (*model.User, error) {
+	return s.userRepo.GetUserByUsername(ctx, username)
+
+}
