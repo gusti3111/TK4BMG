@@ -23,31 +23,20 @@ func NewItemRepository() *ItemRepository {
 
 // CreateItem saves a new item into the Items table
 func (r *ItemRepository) CreateItem(ctx context.Context, item *model.Item) error {
-	categoryID := item.CategoryID
-	if categoryID == 0 {
-		categoryID = 1 // default kategori
-	}
-
-	query := `
-		INSERT INTO items (id_user, id_kategori, nama_item, jumlah_item, harga_satuan)
-		VALUES ($1, $2, $3, $4, $5)
-	`
+	// TotalCost dihitung di service/handler sebelum dipanggil
+	query := `INSERT INTO items (nama_item, jumlah_item, harga_satuan)
+	          VALUES ($1, $2, $3)`
 
 	_, err := r.db.ExecContext(ctx, query,
-		item.UserID,
-		item.CategoryID,
 		item.ItemName,
 		item.Quantity,
 		item.UnitPrice,
-		item.TotalCost,
-		item.PurchasedDate,
 	)
 
 	if err != nil {
 		log.Printf("Error inserting item: %v", err)
-		return fmt.Errorf("failed to save shopping item: %w", err)
+		return fmt.Errorf("failed to save shopping item")
 	}
-
 	return nil
 }
 
@@ -114,52 +103,48 @@ func (r *ItemRepository) GetTotalSpendingByDateRange(ctx context.Context, userID
 
 	return totalSpending, nil
 }
+func (r *ItemRepository) CategoryExists(ctx context.Context, categoryID int, userID int) (bool, error) {
+
+	query := `SELECT COUNT(1) FROM referensi_kategori WHERE id_kategori = $1 AND id_user = $2`
+	var count int
+	err := r.db.QueryRowContext(ctx, query, categoryID, userID).Scan(&count)
+	if err != nil {
+		log.Printf("Error checking category existence: %v", err)
+		return false, fmt.Errorf("failed to check category existence")
+	}
+	return count > 0, nil
+}
 func (r *ItemRepository) UpdateItem(ctx context.Context, item *model.Item) error {
-	query := `
-		UPDATE items
-		SET id_kategori = $1, nama_item = $2, jumlah_item = $3, harga_satuan = $4, total_harga = $5
-		WHERE id_item = $6 AND id_user = $7
-	`
+	query := `UPDATE items 
+	          SET id_kategori = $1, nama_item = $2, jumlah_item = $3, harga_satuan = $4, total_harga = $5, purchased_date = $6
+	          WHERE id_item = $7 AND id_user = $8`
+
 	_, err := r.db.ExecContext(ctx, query,
+
 		item.CategoryID,
 		item.ItemName,
 		item.Quantity,
 		item.UnitPrice,
 		item.TotalCost,
+		item.PurchasedDate,
 		item.ID,
 		item.UserID,
 	)
 	if err != nil {
 		log.Printf("Error updating item: %v", err)
-		return fmt.Errorf("failed to update shopping item: %w", err)
+		return fmt.Errorf("failed to update item")
 	}
 	return nil
-
 }
 
 func (r *ItemRepository) DeleteItem(ctx context.Context, itemID int, userID int) error {
-	query := `
-		DELETE FROM items
-		WHERE id_item = $1 AND id_user = $2
-	`
+	query := `DELETE FROM items WHERE id_item = $1 AND id_user = $2`
 	_, err := r.db.ExecContext(ctx, query, itemID, userID)
 	if err != nil {
 		log.Printf("Error deleting item: %v", err)
-		return fmt.Errorf("failed to delete shopping item: %w", err)
+		return fmt.Errorf("failed to delete item")
 	}
 	return nil
-
-}
-
-// CategoryExists memeriksa apakah kategori dengan ID tertentu ada milik user tertentu
-func (r *ItemRepository) CategoryExists(ctx context.Context, categoryID int, userID int) (bool, error) {
-	query := `SELECT COUNT(*) FROM referensi_kategori WHERE id_kategori = $1 AND id_user = $2`
-	var count int
-	err := r.db.QueryRowContext(ctx, query, categoryID, userID).Scan(&count)
-	if err != nil {
-		return false, err
-	}
-	return count > 0, nil
 }
 
 // Note: Repository untuk Budget, Category, dan Report akan dibuat di tahap selanjutnya

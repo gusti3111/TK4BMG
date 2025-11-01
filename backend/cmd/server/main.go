@@ -80,7 +80,7 @@ func setupRoutes(r *gin.Engine) {
 
 		// Items
 		secureV1.POST("/items", itemHandler.CreateItem)
-		secureV1.GET("/items/:id", itemHandler.GetItemsByUserID)
+		secureV1.GET("/items/:id", itemHandler.GetItems)
 		// secureV1.PUT("/items/:id", itemHandler.UpdateItem)
 		// secureV1.DELETE("/items/:id", itemHandler.DeleteItem)
 

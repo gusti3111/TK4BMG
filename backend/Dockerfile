@@ -20,6 +20,11 @@ COPY . .
 # ./cmd/server/main.go: Entry point aplikasi
 RUN go build -o /app/bin/bmg-server ./cmd/server/main.go
 
+#
+# Tambahkan ini 👇
+ENV APP_MODE dev
+
+
 
 # --- Stage 2: Final Image (Image runtime yang sangat kecil) ---
 FROM alpine:latest
