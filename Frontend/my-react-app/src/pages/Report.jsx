@@ -3,14 +3,12 @@ import {
     BarChart, Tooltip, ResponsiveContainer, Bar as RechartsBar, 
     XAxis, YAxis, CartesianGrid, Legend 
 } from 'recharts';
-// --- 1. Import Ikon Download ---
 import { BarChart3, Loader, AlertCircle, Download } from 'lucide-react'; 
 
 const API_BASE_URL = 'http://localhost:8080/api/v1';
 
-// --- Komponen ChartCard (Tidak berubah) ---
+// Komponen ChartCard
 const ChartCard = ({ title, children, icon: Icon }) => (
-  // ... (kode ChartCard tetap sama) ...
   <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 h-full flex flex-col">
     <div className="flex items-center justify-between border-b pb-3 mb-4">
         <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
@@ -21,7 +19,6 @@ const ChartCard = ({ title, children, icon: Icon }) => (
     </div>
   </div>
 );
-// ------------------------------------------------
 
 const BarIcon = BarChart; // Alias
 
@@ -33,13 +30,11 @@ const Reports = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     
-    // --- 2. Tambahkan State untuk Tombol Download ---
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadError, setDownloadError] = useState(null);
 
-    // --- fetchWithAuth (Tidak berubah) ---
+    // fetchWithAuth (Sudah Benar)
     const fetchWithAuth = useCallback(async (url, options = {}) => {
-        // ... (kode fetchWithAuth tetap sama) ...
         const token = localStorage.getItem('authToken');
         const headers = {
             'Content-Type': 'application/json',
@@ -57,13 +52,16 @@ const Reports = () => {
         return text ? JSON.parse(text) : null;
     }, []);
 
-    // --- fetchData (Tidak berubah) ---
+    // fetchData (Sudah Benar)
+    // Fungsi ini sudah benar mengambil data dari { "data": { "pie_chart": [...] } }
+    // sesuai dengan dash_handler.go
     const fetchData = useCallback(async () => {
-        // ... (kode fetchData tetap sama) ...
         setIsLoading(true);
         setError(null);
         try {
+            // Memanggil endpoint charts
             const chartsData = await fetchWithAuth(`${API_BASE_URL}/dashboard/charts`);
+            // Membaca data yang dibungkus
             if (chartsData && chartsData.data && chartsData.data.pie_chart) {
                 setReportData(chartsData.data.pie_chart);
             } else {
@@ -77,13 +75,13 @@ const Reports = () => {
         }
     }, [fetchWithAuth]);
 
-    // --- useEffect (Tidak berubah) ---
+    // useEffect (Sudah Benar)
     useEffect(() => {
         fetchData();
     }, [fetchData]);
 
     
-    // --- 3. Buat Fungsi Handle Download ---
+    // handleDownloadReport (Sudah Benar)
     const handleDownloadReport = async () => {
         setIsDownloading(true);
         setDownloadError(null);
@@ -95,33 +93,23 @@ const Reports = () => {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            // Panggil API download (kita tidak bisa pakai fetchWithAuth karena ini bukan JSON)
             const response = await fetch(`${API_BASE_URL}/reports/download?type=excel`, {
                 method: 'GET',
                 headers: headers
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({})); // Coba parse error
+                const errorData = await response.json().catch(() => ({})); 
                 throw new Error(errorData.message || errorData.error || 'Gagal mengunduh laporan');
             }
 
-            // Ambil data sebagai Blob (file biner)
             const blob = await response.blob();
-            
-            // Buat URL sementara di memori browser
             const url = window.URL.createObjectURL(blob);
-            
-            // Buat link <a> palsu
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Laporan_Mingguan_${new Date().toISOString().split('T')[0]}.xlsx`; // Nama file
-            
-            // Klik link palsu tersebut untuk memicu download
+            a.download = `Laporan_Mingguan_${new Date().toISOString().split('T')[0]}.xlsx`; 
             document.body.appendChild(a);
             a.click();
-            
-            // Hapus link palsu dari memori
             a.remove();
             window.URL.revokeObjectURL(url);
 
@@ -134,25 +122,23 @@ const Reports = () => {
     };
 
 
-    // --- (totalPengeluaran dan formatCurrency tidak berubah) ---
+    // totalPengeluaran dan formatCurrency (Sudah Benar)
     const totalPengeluaran = reportData.reduce((sum, item) => sum + item.value, 0);
     const formatCurrency = (amount) => {
-        // ... (kode formatCurrency tetap sama) ...
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
     };
 
-    // --- (Tampilan Loading dan Error tidak berubah) ---
+    // Tampilan Loading dan Error (Sudah Benar)
     if (isLoading) {
-        // ... (kode loading tetap sama) ...
+        // ... (kode loading)
     }
     if (error) {
-        // ... (kode error tetap sama) ...
+        // ... (kode error)
     }
 
     return (
         <div className="p-4 sm:p-6 lg:p-8 bg-gray-100 min-h-screen">
-            {/* --- 4. Tambahkan Tombol Download di Samping Judul --- */}
-
+            {/* Tombol Download (Sudah Benar) */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
                 <h2 className="text-3xl font-extrabold text-gray-900 flex items-center mb-4 sm:mb-0">
                     <BarChart3 className="w-8 h-8  text-indigo-600" />
@@ -172,7 +158,7 @@ const Reports = () => {
                 </button>
             </div>
             
-            {/* Tampilkan error download jika ada */}
+            {/* Error download (Sudah Benar) */}
             {downloadError && (
                  <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6" role="alert">
                     <p className="font-bold">Gagal Mengunduh</p>
@@ -180,9 +166,8 @@ const Reports = () => {
                 </div>
             )}
 
-            {/* --- (Sisa JSX tetap sama) --- */}
+            {/* Total Pengeluaran (Sudah Benar) */}
             <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mb-8">
-                {/* ... (Total Pengeluaran) ... */}
                 <p className="text-lg font-medium text-gray-500">Total Pengeluaran Bulan Ini</p>
                 <p className="text-4xl font-extrabold text-red-600 mt-1">
                     {formatCurrency(totalPengeluaran)}
@@ -190,14 +175,18 @@ const Reports = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Visualisasi Bar Chart */}
+                
+                {/* ======================================================
+                  =============== PERBAIKAN 1 DI SINI ==================
+                  ======================================================
+                */}
                 <div className="lg:col-span-2">
-                    {/* ... (ChartCard) ... */}
                     <ChartCard title="Distribusi Pengeluaran per Kategori" icon={BarIcon}>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={reportData} margin={{ top: 20, right: 20, left: 20, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="category" />
+                                {/* Ganti dataKey="category" menjadi "name" */}
+                                <XAxis dataKey="name" />
                                 <YAxis />
                                 <Tooltip formatter={(value) => formatCurrency(value)} />
                                 <Legend />
@@ -205,12 +194,13 @@ const Reports = () => {
                             </BarChart>
                         </ResponsiveContainer>
                     </ChartCard>
-
                 </div>
-
-                {/* Detail Tabel Pengeluaran */}
+                
+                {/* ======================================================
+                  =============== PERBAIKAN 2 DI SINI ==================
+                  ======================================================
+                */}
                 <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                    {/* ... (Rincian Kategori) ... */}
                     <h3 className="text-xl font-semibold text-gray-800 mb-4">Rincian Kategori</h3>              
                     <table className="w-full table-auto">
                         <thead>
@@ -221,16 +211,16 @@ const Reports = () => {
                         </thead>
                         <tbody>
                             {reportData.map((item, index) => (
-
                                 <tr key={index} className={index % 2 === 0 ? 'bg-red' : 'bg-gray-50'}>
-                                    <td className="px-4 py-2 text-sm text-gray-700">{item.nama_item}</td>
+                                    {/* Ganti item.nama_item menjadi item.name */}
+                                    <td className="px-4 py-2 text-sm text-gray-700">{item.name}</td>
                                     <td className="px-4 py-2 text-sm text-gray-700 text-right">{formatCurrency(item.value)}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                    
                 </div>
+                
             </div>
         </div>
     );
