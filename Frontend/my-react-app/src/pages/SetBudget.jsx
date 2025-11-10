@@ -8,12 +8,15 @@ const API_BASE_URL = 'http://localhost:8080/api/v1';
  */
 const SetBudget = () => {
     const [nominalBudget, setNominalBudget] = useState('');
+    
+    // --- PERBAIKAN: Pastikan state awal lengkap ---
     const [summary, setSummary] = useState({
+        total_belanja: 0,
         budget: 0,
-        terpakai: 0,
-        sisa: 0,
+        sisa: 0, // Ganti dari sisa_budget agar konsisten
         persen_terpakai: 0
     });
+    
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
@@ -51,29 +54,37 @@ const SetBudget = () => {
         setIsLoading(true);
         setError(null);
         try {
-            // PERBAIKAN 1: Endpoint diubah ke /dashboard/summary
-            const data = await fetchWithAuth(`${API_BASE_URL}/dashboard/summary`);
+            // 1. Ambil data (responsnya { "data": { ... } })
+            // Asumsi backend Anda mengirim data terbungkus, sesuai file dash_handler.go
+            const response = await fetchWithAuth(`${API_BASE_URL}/dashboard/summary`);
             
-            // PERBAIKAN 2: Cek 'data' langsung (bukan data.data)
-            if (data) {
-                // PERBAIKAN 3: Gunakan 'total_belanja' dari backend, bukan 'terpakai'
-                const budget = data.budget || 0;
-                const terpakai = data.total_belanja || 0; 
+            // 2. Cek apakah 'data.data' ada
+            if (response && response.data) {
+                const summaryData = response.data;
                 
-                // Logika kalkulasi ini sudah benar
-                const sisa = budget - terpakai;
+                // 3. Ambil nilai dari data
+                const budget = summaryData.budget || 0;
+                const terpakai = summaryData.total_belanja || 0; 
+                
+                // 4. Lakukan kalkulasi di SINI
+                // Backend mungkin sudah mengirim 'sisa_budget', tapi lebih aman menghitung di frontend
+                const sisa = budget - terpakai; 
                 const persen = budget > 0 ? (terpakai / budget) * 100 : 0;
                 
+                // 5. Set state dengan SEMUA nilai baru
                 setSummary({
-                    budget: summary.budget,
-                    terpakai: summary.terpakai,
-                    sisa: summary.sisa,
-                    persen_terpakai: summary.persen_terpakai
+                    budget: budget,
+                    terpakai: terpakai,
+                    sisa: sisa, // Gunakan 'sisa' yang baru dihitung
+                    persen_terpakai: persen.toFixed(0) // Kirim persen yang sudah dihitung
                 });
                 
+                // 6. Set input form
                 setNominalBudget(budget.toString());
             } else {
+                // Jika tidak ada data, reset state
                 setSummary({ budget: 0, terpakai: 0, sisa: 0, persen_terpakai: 0 });
+                setNominalBudget('0');
             }
         } catch (err) {
             setError(err.message);
@@ -125,7 +136,7 @@ const SetBudget = () => {
         }
     };
 
-    // ... (Sisa kode (formatIDR, JSX/tampilan) tidak perlu diubah) ...
+    // ... (Sisa kode (formatIDR) tidak perlu diubah) ...
     
     // Format mata uang Rupiah
     const formatIDR = (value) => 
@@ -244,12 +255,20 @@ const SetBudget = () => {
                     </div>
                     <div className="flex justify-between">
                         <span className="font-medium">Sudah Dipakai:</span>
+                        {/* ======================================================
+                          =============== PERBAIKAN 1 DI SINI ==================
+                          ======================================================
+                        */}
                         <span className="font-bold text-red-600">{formatIDR(summary.terpakai)}</span>
                     </div>
                     <hr className="my-1 border-gray-200" />
                     <div className="flex justify-between text-lg">
                         <span className="font-bold">Sisa Budget:</span>
                         <span className={`font-bold ${summary.sisa >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {/* ======================================================
+                              =============== PERBAIKAN 2 DI SINI ==================
+                              ======================================================
+                            */}
                             {formatIDR(summary.sisa)}
                         </span>
                     </div>
